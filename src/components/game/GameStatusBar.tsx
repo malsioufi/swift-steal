@@ -4,11 +4,13 @@ import { useTranslation } from 'react-i18next';
 interface GameStatusBarProps {
   round: number;
   stake: number;
+  questionNum?: number;
+  totalQuestions?: number;
 }
 
 const ROUND_STAKES = [100, 250, 400, 550, 700, 850, 1000];
 
-export default function GameStatusBar({ round, stake }: GameStatusBarProps) {
+export default function GameStatusBar({ round, stake, questionNum, totalQuestions }: GameStatusBarProps) {
   const { t } = useTranslation();
 
   return (
@@ -35,6 +37,11 @@ export default function GameStatusBar({ round, stake }: GameStatusBarProps) {
         <span className="text-xs font-mono-game text-muted-foreground">
           {round}/7
         </span>
+        {questionNum && totalQuestions && (
+          <span className="text-[10px] font-mono-game text-muted-foreground ml-1">
+            Q{questionNum}/{totalQuestions}
+          </span>
+        )}
       </div>
 
       {/* Stake */}

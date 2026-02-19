@@ -25,6 +25,7 @@ export interface TriviaQuestion {
 
 const ROUND_STAKES = [100, 250, 400, 550, 700, 850, 1000];
 const STARTING_POINTS = 1000;
+const QUESTIONS_PER_ROUND = 5;
 
 const PLAYER_COLORS = [
   '185 100% 50%', // cyan (human)
@@ -55,6 +56,32 @@ const QUESTIONS: TriviaQuestion[] = [
   { id: '12', text: 'Who discovered penicillin?', answer: 'alexander fleming', choices: ['Louis Pasteur', 'Alexander Fleming', 'Marie Curie', 'Joseph Lister'], category: 'Science' },
   { id: '13', text: 'What is the hardest natural substance on Earth?', answer: 'diamond', choices: ['Gold', 'Iron', 'Diamond', 'Platinum'], category: 'Science' },
   { id: '14', text: 'What is the longest river in the world?', answer: 'nile', choices: ['Amazon', 'Nile', 'Mississippi', 'Yangtze'], category: 'Geography' },
+  { id: '15', text: 'What is the speed of light in km/s?', answer: '300000', choices: ['150,000', '300,000', '500,000', '1,000,000'], category: 'Science' },
+  { id: '16', text: 'Which country gifted the Statue of Liberty to the USA?', answer: 'france', choices: ['England', 'France', 'Spain', 'Germany'], category: 'History' },
+  { id: '17', text: 'What is the largest mammal in the world?', answer: 'blue whale', choices: ['Elephant', 'Blue Whale', 'Giraffe', 'Hippopotamus'], category: 'Science' },
+  { id: '18', text: 'Who developed the theory of relativity?', answer: 'einstein', choices: ['Newton', 'Einstein', 'Hawking', 'Bohr'], category: 'Science' },
+  { id: '19', text: 'What is the capital of Australia?', answer: 'canberra', choices: ['Sydney', 'Melbourne', 'Canberra', 'Brisbane'], category: 'Geography' },
+  { id: '20', text: 'How many bones are in the adult human body?', answer: '206', choices: ['186', '206', '226', '256'], category: 'Science' },
+  { id: '21', text: 'What year did the Titanic sink?', answer: '1912', choices: ['1905', '1912', '1918', '1920'], category: 'History' },
+  { id: '22', text: 'Which planet has the most moons?', answer: 'saturn', choices: ['Jupiter', 'Saturn', 'Uranus', 'Neptune'], category: 'Science' },
+  { id: '23', text: 'What is the chemical formula for water?', answer: 'h2o', choices: ['CO2', 'H2O', 'NaCl', 'O2'], category: 'Science' },
+  { id: '24', text: 'Who was the first person to walk on the Moon?', answer: 'neil armstrong', choices: ['Buzz Aldrin', 'Neil Armstrong', 'Yuri Gagarin', 'John Glenn'], category: 'History' },
+  { id: '25', text: 'What is the largest desert in the world?', answer: 'sahara', choices: ['Gobi', 'Sahara', 'Antarctic', 'Arabian'], category: 'Geography' },
+  { id: '26', text: 'Which element has the atomic number 1?', answer: 'hydrogen', choices: ['Helium', 'Hydrogen', 'Oxygen', 'Carbon'], category: 'Science' },
+  { id: '27', text: 'What language has the most native speakers?', answer: 'mandarin', choices: ['English', 'Spanish', 'Mandarin', 'Hindi'], category: 'Culture' },
+  { id: '28', text: 'What is the tallest mountain in the world?', answer: 'everest', choices: ['K2', 'Kangchenjunga', 'Everest', 'Lhotse'], category: 'Geography' },
+  { id: '29', text: 'Who wrote "1984"?', answer: 'george orwell', choices: ['Aldous Huxley', 'George Orwell', 'Ray Bradbury', 'H.G. Wells'], category: 'Literature' },
+  { id: '30', text: 'What is the currency of Japan?', answer: 'yen', choices: ['Won', 'Yuan', 'Yen', 'Ringgit'], category: 'Culture' },
+  { id: '31', text: 'How many players are on a soccer team?', answer: '11', choices: ['9', '10', '11', '12'], category: 'Sports' },
+  { id: '32', text: 'What organ pumps blood through the body?', answer: 'heart', choices: ['Liver', 'Heart', 'Lungs', 'Brain'], category: 'Science' },
+  { id: '33', text: 'Which country has the largest population?', answer: 'india', choices: ['China', 'India', 'USA', 'Indonesia'], category: 'Geography' },
+  { id: '34', text: 'What is the boiling point of water in Celsius?', answer: '100', choices: ['90', '100', '110', '120'], category: 'Science' },
+  { id: '35', text: 'Who composed the "Moonlight Sonata"?', answer: 'beethoven', choices: ['Mozart', 'Beethoven', 'Bach', 'Chopin'], category: 'Art' },
+  { id: '36', text: 'What is the largest continent?', answer: 'asia', choices: ['Africa', 'Asia', 'Europe', 'North America'], category: 'Geography' },
+  { id: '37', text: 'What does DNA stand for?', answer: 'deoxyribonucleic acid', choices: ['Deoxyribonucleic Acid', 'Dinitrogen Acid', 'Dynamic Nuclear Acid', 'Dual Nucleic Acid'], category: 'Science' },
+  { id: '38', text: 'Which planet is closest to the Sun?', answer: 'mercury', choices: ['Venus', 'Mercury', 'Earth', 'Mars'], category: 'Science' },
+  { id: '39', text: 'What is the national animal of Canada?', answer: 'beaver', choices: ['Moose', 'Beaver', 'Bear', 'Eagle'], category: 'Culture' },
+  { id: '40', text: 'In what year did the Berlin Wall fall?', answer: '1989', choices: ['1987', '1989', '1991', '1993'], category: 'History' },
 ];
 
 function fuzzyMatch(input: string, answer: string): boolean {
@@ -77,23 +104,27 @@ function fuzzyMatch(input: string, answer: string): boolean {
   return false;
 }
 
-// Predator Bot AI: targets highest-scoring or near-elimination players
+// Predator Bot AI: targets strategically but not always the human
 function predatorSelectTarget(bot: Player, players: Player[], roundStake: number): string {
   const targets = players.filter(p => p.id !== bot.id && p.status === 'ACTIVE');
   if (targets.length === 0) return '';
   
-  // Strategy: 70% chance target highest scorer, 30% target someone near freeze threshold
-  const random = Math.random();
-  if (random < 0.7) {
-    // Target highest scorer
-    return targets.sort((a, b) => b.points - a.points)[0].id;
-  } else {
-    // Target someone close to being frozen (just above threshold)
-    const vulnerable = targets
-      .filter(p => p.points > roundStake && p.points <= roundStake * 2)
-      .sort((a, b) => a.points - b.points);
-    return vulnerable.length > 0 ? vulnerable[0].id : targets.sort((a, b) => b.points - a.points)[0].id;
+  // Weighted random: each target gets a weight based on their points
+  // Higher scorers get higher weight, but it's probabilistic, not deterministic
+  const weights = targets.map(t => {
+    let w = t.points / 100; // base weight from points
+    // Slightly boost targeting vulnerable players
+    if (t.points > roundStake && t.points <= roundStake * 2) w *= 1.3;
+    return { id: t.id, weight: Math.max(w, 1) };
+  });
+  
+  const totalWeight = weights.reduce((sum, w) => sum + w.weight, 0);
+  let roll = Math.random() * totalWeight;
+  for (const w of weights) {
+    roll -= w.weight;
+    if (roll <= 0) return w.id;
   }
+  return targets[0].id;
 }
 
 interface GameState {
@@ -103,6 +134,9 @@ interface GameState {
   players: Player[];
   currentQuestion: TriviaQuestion | null;
   usedQuestionIds: string[];
+  
+  // Round question tracking
+  questionInRound: number; // 1-based, which question in this round
   
   // Typewriter state
   revealedText: string;
@@ -116,6 +150,9 @@ interface GameState {
   // Answer state
   playerAnswer: string;
   answerResult: 'correct' | 'incorrect' | 'timeout' | null;
+  lastSubmittedAnswer: string | null;
+  correctAnswer: string | null;
+  answeringPlayerName: string | null;
   
   // Steal state
   selectedTargetId: string | null;
@@ -127,6 +164,7 @@ interface GameState {
   initGame: () => void;
   setPhase: (phase: GamePhase) => void;
   startRound: () => void;
+  startNextQuestion: () => void;
   advanceTypewriter: () => void;
   buzz: (playerId: string) => void;
   submitAnswer: (answer: string) => void;
@@ -148,6 +186,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   players: [],
   currentQuestion: null,
   usedQuestionIds: [],
+  questionInRound: 0,
   revealedText: '',
   typewriterIndex: 0,
   buzzedPlayerId: null,
@@ -155,6 +194,9 @@ export const useGameStore = create<GameState>((set, get) => ({
   lockedOutPlayerIds: [],
   playerAnswer: '',
   answerResult: null,
+  lastSubmittedAnswer: null,
+  correctAnswer: null,
+  answeringPlayerName: null,
   selectedTargetId: null,
   eliminatedThisRound: null,
 
@@ -204,13 +246,27 @@ export const useGameStore = create<GameState>((set, get) => ({
       return { ...p, status: 'ACTIVE' as PlayerStatus };
     });
 
+    set({
+      currentRound: round,
+      players,
+      questionInRound: 0,
+      eliminatedThisRound: null,
+    });
+
+    // Start first question of the round
+    get().startNextQuestion();
+  },
+
+  startNextQuestion: () => {
+    const state = get();
+    const nextQ = state.questionInRound + 1;
+
     // Pick unused question
     const available = QUESTIONS.filter(q => !state.usedQuestionIds.includes(q.id));
     const question = available[Math.floor(Math.random() * available.length)] || QUESTIONS[0];
 
     set({
-      currentRound: round,
-      players,
+      questionInRound: nextQ,
       currentQuestion: question,
       usedQuestionIds: [...state.usedQuestionIds, question.id],
       revealedText: '',
@@ -219,8 +275,10 @@ export const useGameStore = create<GameState>((set, get) => ({
       lockedOutPlayerIds: [],
       playerAnswer: '',
       answerResult: null,
+      lastSubmittedAnswer: null,
+      correctAnswer: null,
+      answeringPlayerName: null,
       selectedTargetId: null,
-      eliminatedThisRound: null,
       phase: 'TYPEWRITER',
     });
   },
@@ -270,9 +328,16 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (!state.currentQuestion || !state.buzzedPlayerId) return;
     
     const isCorrect = fuzzyMatch(answer, state.currentQuestion.answer);
+    const playerName = state.players.find(p => p.id === state.buzzedPlayerId)?.name || '';
     
     if (isCorrect) {
-      set({ answerResult: 'correct', phase: 'STEAL_SELECT' });
+      set({
+        answerResult: 'correct',
+        lastSubmittedAnswer: answer,
+        correctAnswer: state.currentQuestion.answer,
+        answeringPlayerName: playerName,
+        phase: 'STEAL_SELECT',
+      });
     } else {
       const stake = ROUND_STAKES[state.currentRound - 1];
       const players = state.players.map(p => {
@@ -284,6 +349,9 @@ export const useGameStore = create<GameState>((set, get) => ({
       
       set({
         answerResult: 'incorrect',
+        lastSubmittedAnswer: answer,
+        correctAnswer: state.currentQuestion.answer,
+        answeringPlayerName: playerName,
         players,
         lockedOutPlayerIds: [...state.lockedOutPlayerIds, state.buzzedPlayerId],
       });
@@ -292,9 +360,9 @@ export const useGameStore = create<GameState>((set, get) => ({
       setTimeout(() => {
         const current = get();
         if (current.answerResult === 'incorrect') {
-          set({ phase: 'TYPEWRITER', buzzedPlayerId: null, answerResult: null });
+          set({ phase: 'TYPEWRITER', buzzedPlayerId: null, answerResult: null, lastSubmittedAnswer: null, correctAnswer: null, answeringPlayerName: null });
         }
-      }, 2000);
+      }, 2500);
     }
   },
 
@@ -316,8 +384,18 @@ export const useGameStore = create<GameState>((set, get) => ({
     set({
       selectedTargetId: targetId,
       players,
-      phase: 'ROUND_END',
     });
+
+    // After steal, move to next question or end round
+    setTimeout(() => {
+      const current = get();
+      if (current.questionInRound >= QUESTIONS_PER_ROUND) {
+        set({ phase: 'ROUND_END' });
+        get().endRound();
+      } else {
+        get().startNextQuestion();
+      }
+    }, 2000);
   },
 
   selectMultipleChoice: (choice) => {
@@ -326,10 +404,30 @@ export const useGameStore = create<GameState>((set, get) => ({
     
     const isCorrect = fuzzyMatch(choice, state.currentQuestion.answer);
     if (isCorrect) {
-      set({ answerResult: 'correct', buzzedPlayerId: 'human', phase: 'STEAL_SELECT' });
+      set({
+        answerResult: 'correct',
+        buzzedPlayerId: 'human',
+        lastSubmittedAnswer: choice,
+        correctAnswer: state.currentQuestion.answer,
+        answeringPlayerName: 'YOU',
+        phase: 'STEAL_SELECT',
+      });
     } else {
-      set({ answerResult: 'incorrect' });
-      setTimeout(() => set({ phase: 'ROUND_END' }), 2000);
+      set({
+        answerResult: 'incorrect',
+        lastSubmittedAnswer: choice,
+        correctAnswer: state.currentQuestion.answer,
+        answeringPlayerName: 'YOU',
+      });
+      setTimeout(() => {
+        const current = get();
+        if (current.questionInRound >= QUESTIONS_PER_ROUND) {
+          set({ phase: 'ROUND_END' });
+          get().endRound();
+        } else {
+          get().startNextQuestion();
+        }
+      }, 2500);
     }
   },
 
@@ -427,8 +525,9 @@ export const useGameStore = create<GameState>((set, get) => ({
     const bot = state.players.find(p => p.id === state.buzzedPlayerId);
     if (!bot || !bot.isBot || !state.currentQuestion) return;
     
-    // 60% chance bot answers correctly
-    const correct = Math.random() < 0.6;
+    // 40-55% chance bot answers correctly (smarter bots vary)
+    const botSkill = 0.40 + Math.random() * 0.15;
+    const correct = Math.random() < botSkill;
     
     setTimeout(() => {
       if (correct) {
