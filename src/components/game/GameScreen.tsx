@@ -19,7 +19,7 @@ export default function GameScreen() {
     advanceTypewriter, buzz, submitAnswer, selectTarget,
     endRound, nextRound, startRound, lockedOutPlayerIds,
     runBotBuzz, runBotAnswer, runBotTargetSelect, eliminatedThisRound,
-    currentQuestion,
+    currentQuestion, questionInRound, lastSubmittedAnswer, correctAnswer, answeringPlayerName,
   } = useGameStore();
 
   const typewriterInterval = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -53,9 +53,10 @@ export default function GameScreen() {
     }
   }, [phase, buzzedPlayerId, runBotTargetSelect]);
 
-  // Auto end round after steal or round_end display
+  // Auto end round after elimination display
   useEffect(() => {
     if (phase === 'ROUND_END' && !eliminatedThisRound) {
+      // endRound will find the lowest scorer and eliminate them
       const timer = setTimeout(() => endRound(), 1500);
       return () => clearTimeout(timer);
     }
@@ -79,7 +80,7 @@ export default function GameScreen() {
   return (
     <div className="min-h-screen bg-background flex flex-col items-center relative overflow-hidden">
       {/* Status bar */}
-      {currentRound > 0 && <GameStatusBar round={currentRound} stake={stake} />}
+      {currentRound > 0 && <GameStatusBar round={currentRound} stake={stake} questionNum={questionInRound} totalQuestions={5} />}
 
       {/* Arena */}
       <div className="flex-1 flex flex-col items-center justify-center w-full max-w-lg mx-auto px-4 py-2 gap-4">
@@ -116,6 +117,31 @@ export default function GameScreen() {
             <p className="font-display text-sm text-danger animate-pulse-glow tracking-widest uppercase">
               {players.find(p => p.id === buzzedPlayerId)?.name} is answering...
             </p>
+          </div>
+        )}
+
+        {/* Answer reveal */}
+        {lastSubmittedAnswer && answerResult && phase !== 'TYPEWRITER' && (
+          <div className="w-full px-4">
+            <div className={`border rounded-lg p-3 text-center space-y-1 ${
+              answerResult === 'correct' 
+                ? 'border-gold/50 bg-gold/10' 
+                : 'border-danger/50 bg-danger/10'
+            }`}>
+              <p className="text-xs font-display tracking-widest uppercase text-muted-foreground">
+                {answeringPlayerName} answered:
+              </p>
+              <p className={`font-mono-game text-sm font-bold ${
+                answerResult === 'correct' ? 'text-gold' : 'text-danger'
+              }`}>
+                "{lastSubmittedAnswer}"
+              </p>
+              {answerResult === 'incorrect' && correctAnswer && (
+                <p className="text-xs text-muted-foreground">
+                  Correct answer: <span className="text-gold font-bold">{correctAnswer}</span>
+                </p>
+              )}
+            </div>
           </div>
         )}
 
