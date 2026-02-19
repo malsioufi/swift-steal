@@ -1,14 +1,15 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useGameStore } from '@/store/gameStore';
+import LobbyScreen from '@/components/game/LobbyScreen';
+import GameScreen from '@/components/game/GameScreen';
 
 const Index = () => {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
-    </div>
-  );
+  const { phase } = useGameStore();
+
+  if (phase === 'LOBBY' && useGameStore.getState().players.length === 0) {
+    return <LobbyScreen />;
+  }
+
+  return <GameScreen />;
 };
 
 export default Index;
