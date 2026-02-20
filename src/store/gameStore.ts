@@ -239,12 +239,10 @@ export const useGameStore = create<GameState>((set, get) => ({
   startRound: () => {
     const state = get();
     const round = state.currentRound + 1;
-    const stake = ROUND_STAKES[round - 1];
     
-    // Update frozen status
+    // Reset all non-eliminated players to ACTIVE at round start
     const players = state.players.map(p => {
       if (p.status === 'ELIMINATED') return p;
-      if (p.points < stake) return { ...p, status: 'FROZEN' as PlayerStatus };
       return { ...p, status: 'ACTIVE' as PlayerStatus };
     });
 
@@ -345,9 +343,11 @@ export const useGameStore = create<GameState>((set, get) => ({
       });
     } else {
       const stake = ROUND_STAKES[state.currentRound - 1];
+      const roundStake = ROUND_STAKES[state.currentRound - 1];
       const players = state.players.map(p => {
         if (p.id === state.buzzedPlayerId) {
-          return { ...p, points: Math.max(0, p.points - stake) };
+          const newPoints = Math.max(0, p.points - stake);
+          return { ...p, points: newPoints, status: (newPoints < roundStake ? 'FROZEN' : 'ACTIVE') as PlayerStatus };
         }
         return p;
       });
@@ -395,7 +395,8 @@ export const useGameStore = create<GameState>((set, get) => ({
         return { ...p, points: p.points + stake };
       }
       if (p.id === targetId) {
-        return { ...p, points: Math.max(0, p.points - stake) };
+        const newPoints = Math.max(0, p.points - stake);
+        return { ...p, points: newPoints, status: (newPoints < stake ? 'FROZEN' : p.status) as PlayerStatus };
       }
       return p;
     });
@@ -435,9 +436,11 @@ export const useGameStore = create<GameState>((set, get) => ({
       });
     } else {
       const stake = ROUND_STAKES[state.currentRound - 1];
+      const roundStake = ROUND_STAKES[state.currentRound - 1];
       const players = state.players.map(p => {
         if (p.id === state.buzzedPlayerId) {
-          return { ...p, points: Math.max(0, p.points - stake) };
+          const newPoints = Math.max(0, p.points - stake);
+          return { ...p, points: newPoints, status: (newPoints < roundStake ? 'FROZEN' : 'ACTIVE') as PlayerStatus };
         }
         return p;
       });

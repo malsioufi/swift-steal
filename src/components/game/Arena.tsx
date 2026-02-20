@@ -14,17 +14,17 @@ export default function Arena({ isTargetMode = false, onTargetSelect }: ArenaPro
 
   const activePlayers = players.filter(p => p.status !== 'ELIMINATED');
   
-  // Arena dimensions - responsive
-  const size = Math.min(360, typeof window !== 'undefined' ? window.innerWidth - 40 : 360);
+  // Arena dimensions - responsive, use a fixed aspect ratio container
+  const size = 300;
   const centerX = size / 2;
   const centerY = size / 2;
-  const arenaRadius = size * 0.35;
+  const arenaRadius = size * 0.38;
 
   return (
     <div
       ref={containerRef}
-      className="relative mx-auto arena-gradient rounded-full border border-arena-ring/30 overflow-visible"
-      style={{ width: size, height: size, margin: '2rem auto' }}
+      className="relative arena-gradient rounded-full border border-arena-ring/30"
+      style={{ width: size, height: size }}
     >
       {/* Arena ring glow */}
       <div 
