@@ -156,6 +156,7 @@ interface GameState {
   
   // Steal state
   selectedTargetId: string | null;
+  buzzedDuringMC: boolean;
   
   // Round results
   eliminatedThisRound: string | null;
@@ -198,6 +199,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   correctAnswer: null,
   answeringPlayerName: null,
   selectedTargetId: null,
+  buzzedDuringMC: false,
   eliminatedThisRound: null,
 
   initGame: () => {
@@ -279,6 +281,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       correctAnswer: null,
       answeringPlayerName: null,
       selectedTargetId: null,
+      buzzedDuringMC: false,
       phase: 'TYPEWRITER',
     });
   },
@@ -308,7 +311,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   buzz: (playerId) => {
     const state = get();
-    if (state.phase !== 'TYPEWRITER') return;
+    if (state.phase !== 'TYPEWRITER' && state.phase !== 'MULTIPLE_CHOICE') return;
     
     const player = state.players.find(p => p.id === playerId);
     if (!player || player.status !== 'ACTIVE') return;
@@ -317,6 +320,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     set({
       buzzedPlayerId: playerId,
       phase: 'ANSWERING',
+      buzzedDuringMC: state.phase === 'MULTIPLE_CHOICE',
       answerTimer: 5,
       answerResult: null,
       playerAnswer: '',
@@ -335,6 +339,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         answerResult: 'correct',
         lastSubmittedAnswer: answer,
         correctAnswer: state.currentQuestion.answer,
+        revealedText: state.currentQuestion.text,
         answeringPlayerName: playerName,
         phase: 'STEAL_SELECT',
       });
@@ -347,20 +352,34 @@ export const useGameStore = create<GameState>((set, get) => ({
         return p;
       });
       
+      const newLockedOut = [...state.lockedOutPlayerIds, state.buzzedPlayerId!];
+      
       set({
         answerResult: 'incorrect',
         lastSubmittedAnswer: answer,
-        correctAnswer: state.currentQuestion.answer,
+        correctAnswer: null,
         answeringPlayerName: playerName,
         players,
-        lockedOutPlayerIds: [...state.lockedOutPlayerIds, state.buzzedPlayerId],
+        lockedOutPlayerIds: newLockedOut,
       });
 
-      // Resume typewriter after delay
       setTimeout(() => {
         const current = get();
         if (current.answerResult === 'incorrect') {
-          set({ phase: 'TYPEWRITER', buzzedPlayerId: null, answerResult: null, lastSubmittedAnswer: null, correctAnswer: null, answeringPlayerName: null });
+          if (current.lockedOutPlayerIds.length >= 2) {
+            set({
+              phase: 'MULTIPLE_CHOICE',
+              revealedText: current.currentQuestion!.text,
+              buzzedPlayerId: null,
+              answerResult: null,
+              lastSubmittedAnswer: null,
+              correctAnswer: null,
+              answeringPlayerName: null,
+              buzzedDuringMC: false,
+            });
+          } else {
+            set({ phase: 'TYPEWRITER', buzzedPlayerId: null, answerResult: null, lastSubmittedAnswer: null, correctAnswer: null, answeringPlayerName: null });
+          }
         }
       }, 2500);
     }
@@ -368,7 +387,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   selectTarget: (targetId) => {
     const state = get();
-    if (state.phase !== 'STEAL_SELECT' || !state.buzzedPlayerId) return;
+    if (state.phase !== 'STEAL_SELECT' || !state.buzzedPlayerId || state.selectedTargetId) return;
     
     const stake = ROUND_STAKES[state.currentRound - 1];
     const players = state.players.map(p => {
@@ -400,32 +419,64 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   selectMultipleChoice: (choice) => {
     const state = get();
-    if (!state.currentQuestion) return;
+    if (!state.currentQuestion || !state.buzzedPlayerId) return;
     
     const isCorrect = fuzzyMatch(choice, state.currentQuestion.answer);
+    const playerName = state.players.find(p => p.id === state.buzzedPlayerId)?.name || '';
+    
     if (isCorrect) {
       set({
         answerResult: 'correct',
-        buzzedPlayerId: 'human',
         lastSubmittedAnswer: choice,
         correctAnswer: state.currentQuestion.answer,
-        answeringPlayerName: 'YOU',
+        revealedText: state.currentQuestion.text,
+        answeringPlayerName: playerName,
         phase: 'STEAL_SELECT',
       });
     } else {
+      const stake = ROUND_STAKES[state.currentRound - 1];
+      const players = state.players.map(p => {
+        if (p.id === state.buzzedPlayerId) {
+          return { ...p, points: Math.max(0, p.points - stake) };
+        }
+        return p;
+      });
+      
+      const newLockedOut = [...state.lockedOutPlayerIds, state.buzzedPlayerId!];
+      
       set({
         answerResult: 'incorrect',
         lastSubmittedAnswer: choice,
-        correctAnswer: state.currentQuestion.answer,
-        answeringPlayerName: 'YOU',
+        correctAnswer: null,
+        answeringPlayerName: playerName,
+        players,
+        lockedOutPlayerIds: newLockedOut,
       });
+      
       setTimeout(() => {
         const current = get();
-        if (current.questionInRound >= QUESTIONS_PER_ROUND) {
-          set({ phase: 'ROUND_END' });
-          get().endRound();
-        } else {
-          get().startNextQuestion();
+        if (current.answerResult === 'incorrect') {
+          const activePlayers = current.players.filter(p => p.status === 'ACTIVE');
+          const allLockedOut = activePlayers.every(p => current.lockedOutPlayerIds.includes(p.id));
+          
+          if (allLockedOut) {
+            if (current.questionInRound >= QUESTIONS_PER_ROUND) {
+              set({ phase: 'ROUND_END' });
+              get().endRound();
+            } else {
+              get().startNextQuestion();
+            }
+          } else {
+            set({
+              phase: 'MULTIPLE_CHOICE',
+              buzzedPlayerId: null,
+              answerResult: null,
+              lastSubmittedAnswer: null,
+              correctAnswer: null,
+              answeringPlayerName: null,
+              buzzedDuringMC: false,
+            });
+          }
         }
       }, 2500);
     }
@@ -494,7 +545,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   runBotBuzz: () => {
     const state = get();
-    if (state.phase !== 'TYPEWRITER') return;
+    if (state.phase !== 'TYPEWRITER' && state.phase !== 'MULTIPLE_CHOICE') return;
     
     const activeBots = state.players.filter(
       p => p.isBot && p.status === 'ACTIVE' && !state.lockedOutPlayerIds.includes(p.id)
@@ -502,13 +553,13 @@ export const useGameStore = create<GameState>((set, get) => ({
     
     if (activeBots.length === 0) return;
     
-    // Each bot has a small chance to buzz per typewriter tick
-    // Higher chance when more text is revealed
     const revealPercent = state.currentQuestion 
       ? state.typewriterIndex / state.currentQuestion.text.length 
       : 0;
     
-    const buzzChance = 0.01 + revealPercent * 0.03;
+    const buzzChance = state.phase === 'MULTIPLE_CHOICE'
+      ? 0.05 + Math.random() * 0.05
+      : 0.01 + revealPercent * 0.03;
     
     for (const bot of activeBots) {
       if (Math.random() < buzzChance) {
@@ -525,15 +576,31 @@ export const useGameStore = create<GameState>((set, get) => ({
     const bot = state.players.find(p => p.id === state.buzzedPlayerId);
     if (!bot || !bot.isBot || !state.currentQuestion) return;
     
-    // 40-55% chance bot answers correctly (smarter bots vary)
     const botSkill = 0.40 + Math.random() * 0.15;
     const correct = Math.random() < botSkill;
     
     setTimeout(() => {
-      if (correct) {
-        get().submitAnswer(state.currentQuestion!.answer);
+      const current = get();
+      if (current.phase !== 'ANSWERING') return;
+      
+      if (current.buzzedDuringMC) {
+        if (correct) {
+          const correctChoice = current.currentQuestion!.choices.find(c => 
+            fuzzyMatch(c, current.currentQuestion!.answer)
+          );
+          get().selectMultipleChoice(correctChoice || current.currentQuestion!.choices[0]);
+        } else {
+          const wrongChoices = current.currentQuestion!.choices.filter(c => 
+            !fuzzyMatch(c, current.currentQuestion!.answer)
+          );
+          get().selectMultipleChoice(wrongChoices[Math.floor(Math.random() * wrongChoices.length)]);
+        }
       } else {
-        get().submitAnswer('wrong answer');
+        if (correct) {
+          get().submitAnswer(current.currentQuestion!.answer);
+        } else {
+          get().submitAnswer('wrong answer');
+        }
       }
     }, 1000 + Math.random() * 2000);
   },

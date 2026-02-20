@@ -20,6 +20,7 @@ export default function GameScreen() {
     endRound, nextRound, startRound, lockedOutPlayerIds,
     runBotBuzz, runBotAnswer, runBotTargetSelect, eliminatedThisRound,
     currentQuestion, questionInRound, lastSubmittedAnswer, correctAnswer, answeringPlayerName,
+    buzzedDuringMC,
   } = useGameStore();
 
   const typewriterInterval = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -53,6 +54,16 @@ export default function GameScreen() {
     }
   }, [phase, buzzedPlayerId, runBotTargetSelect]);
 
+  // Bot buzz during multiple choice
+  useEffect(() => {
+    if (phase === 'MULTIPLE_CHOICE') {
+      const interval = setInterval(() => {
+        runBotBuzz();
+      }, 500);
+      return () => clearInterval(interval);
+    }
+  }, [phase, runBotBuzz]);
+
   // Auto end round after elimination display
   useEffect(() => {
     if (phase === 'ROUND_END' && !eliminatedThisRound) {
@@ -70,7 +81,7 @@ export default function GameScreen() {
     }
   }, [phase, startRound]);
 
-  const humanCanBuzz = phase === 'TYPEWRITER' 
+  const humanCanBuzz = (phase === 'TYPEWRITER' || phase === 'MULTIPLE_CHOICE')
     && humanPlayer?.status === 'ACTIVE' 
     && !lockedOutPlayerIds.includes('human');
 
@@ -78,7 +89,7 @@ export default function GameScreen() {
   const humanIsSelectingTarget = phase === 'STEAL_SELECT' && buzzedPlayerId === 'human';
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center relative overflow-hidden">
+    <div className="min-h-screen bg-background flex flex-col items-center relative overflow-x-hidden">
       {/* Status bar */}
       {currentRound > 0 && <GameStatusBar round={currentRound} stake={stake} questionNum={questionInRound} totalQuestions={5} />}
 
@@ -90,12 +101,12 @@ export default function GameScreen() {
         />
 
         {/* Question display */}
-        {(phase === 'TYPEWRITER' || phase === 'ANSWERING' || phase === 'STEAL_SELECT') && (
+        {(phase === 'TYPEWRITER' || phase === 'ANSWERING' || phase === 'STEAL_SELECT' || phase === 'MULTIPLE_CHOICE') && (
           <TypewriterDisplay />
         )}
 
         {/* Buzzer */}
-        {phase === 'TYPEWRITER' && (
+        {(phase === 'TYPEWRITER' || phase === 'MULTIPLE_CHOICE') && (
           <div className="flex flex-col items-center gap-2">
             <BuzzerButton onBuzz={() => buzz('human')} disabled={!humanCanBuzz} />
             {humanPlayer?.status === 'FROZEN' && (
@@ -107,9 +118,11 @@ export default function GameScreen() {
         )}
 
         {/* Answer input (human answering) */}
-        {humanIsAnswering && (
+        {humanIsAnswering && !buzzedDuringMC && (
           <AnswerInput onSubmit={(a) => submitAnswer(a)} timeLimit={5} />
         )}
+
+        {humanIsAnswering && buzzedDuringMC && <MultipleChoice />}
 
         {/* Bot answering indicator */}
         {phase === 'ANSWERING' && buzzedPlayerId !== 'human' && (
@@ -154,8 +167,8 @@ export default function GameScreen() {
           </div>
         )}
 
-        {/* Multiple choice */}
-        {phase === 'MULTIPLE_CHOICE' && <MultipleChoice />}
+        {/* Multiple choice - show choices as preview, buzz required to answer */}
+        {phase === 'MULTIPLE_CHOICE' && <MultipleChoice disabled />}
 
         {/* Round end */}
         {phase === 'ROUND_END' && eliminatedThisRound && (
