@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useGameStore } from '@/store/gameStore';
 
-export default function MultipleChoice() {
+export default function MultipleChoice({ disabled: forceDisabled = false }: { disabled?: boolean }) {
   const { t } = useTranslation();
   const { currentQuestion, selectMultipleChoice, answerResult } = useGameStore();
 
@@ -18,7 +18,7 @@ export default function MultipleChoice() {
           <motion.button
             key={choice}
             onClick={() => selectMultipleChoice(choice)}
-            disabled={answerResult !== null}
+            disabled={forceDisabled || answerResult !== null}
             className="bg-secondary hover:bg-secondary/80 border border-border hover:border-primary/50
                        text-secondary-foreground font-mono-game text-sm px-4 py-3 rounded-lg
                        transition-colors disabled:opacity-50"

@@ -23,8 +23,8 @@ export default function Arena({ isTargetMode = false, onTargetSelect }: ArenaPro
   return (
     <div
       ref={containerRef}
-      className="relative mx-auto arena-gradient rounded-full border border-arena-ring/30"
-      style={{ width: size, height: size }}
+      className="relative mx-auto arena-gradient rounded-full border border-arena-ring/30 overflow-visible"
+      style={{ width: size, height: size, margin: '2rem auto' }}
     >
       {/* Arena ring glow */}
       <div 
