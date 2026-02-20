@@ -95,10 +95,12 @@ export default function GameScreen() {
 
       {/* Arena */}
       <div className="flex-1 flex flex-col items-center justify-center w-full max-w-lg mx-auto px-4 py-2 gap-4">
-        <Arena
-          isTargetMode={humanIsSelectingTarget}
-          onTargetSelect={(id) => selectTarget(id)}
-        />
+        <div className="w-full flex justify-center py-4" style={{ overflow: 'visible' }}>
+          <Arena
+            isTargetMode={humanIsSelectingTarget}
+            onTargetSelect={(id) => selectTarget(id)}
+          />
+        </div>
 
         {/* Question display */}
         {(phase === 'TYPEWRITER' || phase === 'ANSWERING' || phase === 'STEAL_SELECT' || phase === 'MULTIPLE_CHOICE') && (
