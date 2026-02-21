@@ -445,40 +445,23 @@ export const useGameStore = create<GameState>((set, get) => ({
         return p;
       });
       
-      const newLockedOut = [...state.lockedOutPlayerIds, state.buzzedPlayerId!];
-      
+      // MC allows only one attempt — wrong answer reveals correct and skips
       set({
         answerResult: 'incorrect',
         lastSubmittedAnswer: choice,
-        correctAnswer: null,
+        correctAnswer: state.currentQuestion.answer,
         answeringPlayerName: playerName,
         players,
-        lockedOutPlayerIds: newLockedOut,
       });
       
       setTimeout(() => {
         const current = get();
         if (current.answerResult === 'incorrect') {
-          const activePlayers = current.players.filter(p => p.status === 'ACTIVE');
-          const allLockedOut = activePlayers.every(p => current.lockedOutPlayerIds.includes(p.id));
-          
-          if (allLockedOut) {
-            if (current.questionInRound >= QUESTIONS_PER_ROUND) {
-              set({ phase: 'ROUND_END' });
-              get().endRound();
-            } else {
-              get().startNextQuestion();
-            }
+          if (current.questionInRound >= QUESTIONS_PER_ROUND) {
+            set({ phase: 'ROUND_END' });
+            get().endRound();
           } else {
-            set({
-              phase: 'MULTIPLE_CHOICE',
-              buzzedPlayerId: null,
-              answerResult: null,
-              lastSubmittedAnswer: null,
-              correctAnswer: null,
-              answeringPlayerName: null,
-              buzzedDuringMC: false,
-            });
+            get().startNextQuestion();
           }
         }
       }, 2500);
