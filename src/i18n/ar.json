@@ -31,5 +31,30 @@
     "nextRound": "الجولة التالية",
     "newGame": "لعبة جديدة",
     "language": "English"
+  },
+  "multiplayer": {
+    "title": "متعدد اللاعبين",
+    "soloPlay": "تدريب فردي",
+    "createRoom": "إنشاء غرفة",
+    "joinRoom": "انضمام لغرفة",
+    "or": "أو",
+    "yourName": "اسمك",
+    "namePlaceholder": "أدخل اسمك",
+    "enterRoomCode": "رمز الغرفة",
+    "join": "انضمام",
+    "roomCode": "رمز الغرفة",
+    "players": "اللاعبون",
+    "host": "المضيف",
+    "you": "أنت",
+    "waitingForPlayers": "...بانتظار انضمام اللاعبين",
+    "waitingForHost": "...بانتظار بدء المضيف",
+    "startGame": "بدء اللعبة",
+    "leave": "مغادرة",
+    "back": "رجوع",
+    "enterName": "أدخل اسمك أولاً",
+    "enterCode": "أدخل رمز غرفة صحيح",
+    "createFailed": "فشل إنشاء الغرفة",
+    "joinFailed": "فشل الانضمام للغرفة",
+    "roomNotFound": "الغرفة غير موجودة أو بدأت بالفعل"
   }
 }

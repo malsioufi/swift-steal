@@ -14,7 +14,92 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      game_players: {
+        Row: {
+          avatar: string
+          color: string
+          created_at: string
+          id: string
+          is_bot: boolean
+          is_host: boolean
+          player_name: string
+          player_order: number
+          player_session_id: string
+          points: number
+          room_id: string
+          status: string
+        }
+        Insert: {
+          avatar?: string
+          color?: string
+          created_at?: string
+          id?: string
+          is_bot?: boolean
+          is_host?: boolean
+          player_name: string
+          player_order?: number
+          player_session_id: string
+          points?: number
+          room_id: string
+          status?: string
+        }
+        Update: {
+          avatar?: string
+          color?: string
+          created_at?: string
+          id?: string
+          is_bot?: boolean
+          is_host?: boolean
+          player_name?: string
+          player_order?: number
+          player_session_id?: string
+          points?: number
+          room_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_players_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "game_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_rooms: {
+        Row: {
+          created_at: string
+          game_state: Json | null
+          host_player_id: string
+          id: string
+          max_players: number
+          room_code: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          game_state?: Json | null
+          host_player_id: string
+          id?: string
+          max_players?: number
+          room_code: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          game_state?: Json | null
+          host_player_id?: string
+          id?: string
+          max_players?: number
+          room_code?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

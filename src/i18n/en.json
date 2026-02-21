@@ -31,5 +31,30 @@
     "nextRound": "NEXT ROUND",
     "newGame": "NEW GAME",
     "language": "العربية"
+  },
+  "multiplayer": {
+    "title": "MULTIPLAYER",
+    "soloPlay": "SOLO PRACTICE",
+    "createRoom": "CREATE ROOM",
+    "joinRoom": "JOIN ROOM",
+    "or": "OR",
+    "yourName": "YOUR NAME",
+    "namePlaceholder": "ENTER NAME",
+    "enterRoomCode": "ROOM CODE",
+    "join": "JOIN",
+    "roomCode": "ROOM CODE",
+    "players": "PLAYERS",
+    "host": "HOST",
+    "you": "YOU",
+    "waitingForPlayers": "Waiting for players to join...",
+    "waitingForHost": "Waiting for host to start...",
+    "startGame": "START GAME",
+    "leave": "LEAVE",
+    "back": "BACK",
+    "enterName": "Enter your name first",
+    "enterCode": "Enter a valid room code",
+    "createFailed": "Failed to create room",
+    "joinFailed": "Failed to join room",
+    "roomNotFound": "Room not found or already started"
   }
 }
