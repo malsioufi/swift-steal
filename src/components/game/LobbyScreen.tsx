@@ -1,10 +1,13 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useGameStore } from '@/store/gameStore';
+import MultiplayerLobby from '@/components/game/MultiplayerLobby';
 
 export default function LobbyScreen() {
   const { t, i18n } = useTranslation();
   const { initGame } = useGameStore();
+  const [view, setView] = useState<'main' | 'multiplayer'>('main');
 
   const toggleLanguage = () => {
     const next = i18n.language === 'en' ? 'ar' : 'en';
@@ -13,9 +16,24 @@ export default function LobbyScreen() {
     document.documentElement.lang = next;
   };
 
-  const handleStart = () => {
+  const handleSoloStart = () => {
     initGame();
   };
+
+  const handleMultiplayerGameStart = (roomId: string, isHost: boolean) => {
+    // For now, navigate to the multiplayer game route
+    // This will be fully implemented in Phase 2-4
+    window.location.href = `/${isHost ? 'host' : 'play'}?room=${roomId}`;
+  };
+
+  if (view === 'multiplayer') {
+    return (
+      <MultiplayerLobby
+        onBack={() => setView('main')}
+        onGameStart={handleMultiplayerGameStart}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center relative overflow-hidden">
@@ -84,20 +102,35 @@ export default function LobbyScreen() {
           ))}
         </motion.div>
 
-        {/* Start button */}
-        <motion.button
-          onClick={handleStart}
-          className="mt-8 px-10 py-4 bg-danger text-destructive-foreground font-display font-black 
-                     text-lg uppercase tracking-[0.2em] rounded-lg glow-danger
-                     hover:brightness-110 transition-all"
+        {/* Mode buttons */}
+        <motion.div
+          className="mt-8 flex flex-col gap-3 items-center"
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 1, type: 'spring', stiffness: 200 }}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
         >
-          {t('game.start')}
-        </motion.button>
+          <motion.button
+            onClick={() => setView('multiplayer')}
+            className="w-64 py-4 bg-danger text-destructive-foreground font-display font-black 
+                       text-lg uppercase tracking-[0.2em] rounded-lg glow-danger
+                       hover:brightness-110 transition-all"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            {t('multiplayer.title')}
+          </motion.button>
+
+          <motion.button
+            onClick={handleSoloStart}
+            className="w-64 py-3 bg-card border border-border text-muted-foreground font-display font-bold 
+                       text-sm uppercase tracking-[0.2em] rounded-lg
+                       hover:border-primary/30 hover:text-foreground transition-all"
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+          >
+            {t('multiplayer.soloPlay')}
+          </motion.button>
+        </motion.div>
       </motion.div>
     </div>
   );
