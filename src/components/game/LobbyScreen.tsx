@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { useGameStore } from '@/store/gameStore';
 import MultiplayerLobby from '@/components/game/MultiplayerLobby';
 
 export default function LobbyScreen() {
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
   const { initGame } = useGameStore();
   const [view, setView] = useState<'main' | 'multiplayer'>('main');
 
@@ -21,9 +23,12 @@ export default function LobbyScreen() {
   };
 
   const handleMultiplayerGameStart = (roomId: string, isHost: boolean) => {
-    // For now, navigate to the multiplayer game route
-    // This will be fully implemented in Phase 2-4
-    window.location.href = `/${isHost ? 'host' : 'play'}?room=${roomId}`;
+    if (isHost) {
+      navigate(`/host?room=${roomId}`);
+    } else {
+      // Player screen will be built in Phase 3
+      navigate(`/play?room=${roomId}`);
+    }
   };
 
   if (view === 'multiplayer') {
