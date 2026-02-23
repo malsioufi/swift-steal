@@ -7,6 +7,7 @@ import HostTypewriterDisplay from '@/components/game/HostTypewriterDisplay';
 import GameStatusBar from '@/components/game/GameStatusBar';
 import FeedbackOverlay from '@/components/game/FeedbackOverlay';
 import MultipleChoice from '@/components/game/MultipleChoice';
+import ShareRoomWidget from '@/components/game/ShareRoomWidget';
 
 const ROUND_STAKES = [100, 250, 400, 550, 700, 850, 1000];
 
@@ -334,6 +335,11 @@ export default function HostScreen({ roomId }: HostScreenProps) {
               )}
             </div>
           ))}
+      </div>
+
+      {/* Share room widget */}
+      <div className="absolute bottom-4 left-4">
+        <ShareRoomWidget roomId={roomId} />
       </div>
 
       {/* Feedback overlay */}
