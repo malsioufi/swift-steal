@@ -22,6 +22,7 @@ export type Database = {
           id: string
           is_bot: boolean
           is_host: boolean
+          last_action: Json | null
           player_name: string
           player_order: number
           player_session_id: string
@@ -36,6 +37,7 @@ export type Database = {
           id?: string
           is_bot?: boolean
           is_host?: boolean
+          last_action?: Json | null
           player_name: string
           player_order?: number
           player_session_id: string
@@ -50,6 +52,7 @@ export type Database = {
           id?: string
           is_bot?: boolean
           is_host?: boolean
+          last_action?: Json | null
           player_name?: string
           player_order?: number
           player_session_id?: string
