@@ -146,13 +146,36 @@ export default function HostScreen({ roomId }: HostScreenProps) {
     }
   }, [phase, eliminatedThisRound, endRound]);
 
+  const humanPlayers = players.filter(p => !p.isBot);
+  const botPlayers = players.filter(p => p.isBot);
+  const activePlayers = players.filter(p => p.status !== 'ELIMINATED');
+
   return (
     <div className="min-h-screen bg-background flex flex-col items-center relative overflow-hidden">
-      {/* Host badge */}
-      <div className="absolute top-4 left-4 px-3 py-1 bg-danger/20 border border-danger/30 rounded-md">
-        <span className="text-[10px] font-display text-danger tracking-[0.3em] uppercase">
-          {t('host.badge', 'HOST SCREEN')}
-        </span>
+      {/* Host badge + connection indicator */}
+      <div className="absolute top-4 left-4 flex items-center gap-3">
+        <div className="px-3 py-1 bg-danger/20 border border-danger/30 rounded-md">
+          <span className="text-[10px] font-display text-danger tracking-[0.3em] uppercase">
+            {t('host.badge', 'HOST SCREEN')}
+          </span>
+        </div>
+        <div className="flex items-center gap-2 px-3 py-1 bg-card border border-border rounded-md">
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
+          </span>
+          <span className="text-[10px] font-mono-game text-muted-foreground">
+            {humanPlayers.length} <span className="text-primary">{humanPlayers.length === 1 ? 'PLAYER' : 'PLAYERS'}</span>
+            {botPlayers.length > 0 && (
+              <> · {botPlayers.length} <span className="text-muted-foreground/60">BOTS</span></>
+            )}
+          </span>
+        </div>
+        <div className="flex items-center gap-1.5 px-3 py-1 bg-card border border-border rounded-md">
+          <span className="text-[10px] font-mono-game text-muted-foreground">
+            {activePlayers.length}<span className="text-primary">/{players.length}</span> ALIVE
+          </span>
+        </div>
       </div>
 
       {/* Status bar */}
