@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useHostGameStore } from '@/store/hostGameStore';
+import { supabase } from '@/integrations/supabase/client';
 import HostArena from '@/components/game/HostArena';
 import HostTypewriterDisplay from '@/components/game/HostTypewriterDisplay';
 import GameStatusBar from '@/components/game/GameStatusBar';
@@ -35,6 +36,56 @@ export default function HostScreen({ roomId }: HostScreenProps) {
       initFromRoom(roomId);
     }
   }, [roomId, initFromRoom]);
+
+  // Listen for player actions via Realtime
+  useEffect(() => {
+    const playerChannel = supabase
+      .channel(`host-player-actions-${roomId}`)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'game_players',
+        filter: `room_id=eq.${roomId}`,
+      }, (payload) => {
+        const action = payload.new.last_action as any;
+        if (!action || !action.type) return;
+        const playerSessionId = payload.new.player_session_id as string;
+        const store = useHostGameStore.getState();
+        
+        switch (action.type) {
+          case 'buzz':
+            store.buzz(playerSessionId);
+            break;
+          case 'answer':
+            if (store.buzzedPlayerId === playerSessionId) {
+              store.submitAnswer(action.value);
+            }
+            break;
+          case 'select_mc':
+            if (store.buzzedPlayerId === playerSessionId) {
+              store.selectMultipleChoice(action.value);
+            }
+            break;
+          case 'select_target':
+            if (store.buzzedPlayerId === playerSessionId) {
+              store.selectTarget(action.value);
+            }
+            break;
+        }
+
+        // Clear the action to avoid re-processing
+        supabase
+          .from('game_players')
+          .update({ last_action: null })
+          .eq('id', payload.new.id)
+          .then();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(playerChannel);
+    };
+  }, [roomId]);
 
   // Auto-start first round after init
   useEffect(() => {
