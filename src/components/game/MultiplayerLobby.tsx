@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { createRoom, joinRoom, getRoomPlayers, subscribeToRoom, getSessionId } from '@/lib/roomService';
+import ShareRoomWidget from '@/components/game/ShareRoomWidget';
 import { supabase } from '@/integrations/supabase/client';
 
 interface MultiplayerLobbyProps {
@@ -230,6 +231,9 @@ export default function MultiplayerLobby({ onBack, onGameStart }: MultiplayerLob
               {t('multiplayer.waitingForHost')}
             </p>
           )}
+
+          {/* Share widget */}
+          <ShareRoomWidget roomId={roomId} />
 
           <button
             onClick={onBack}
